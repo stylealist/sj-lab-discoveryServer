@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /app
 
 # 빌드된 JAR 파일을 복사
-COPY target/your-app.jar /app/your-app.jar
+COPY target/sj-lab-discoveryservice.jar /app/sj-lab-discoveryservice.jar
 
 # 애플리케이션 실행
-ENTRYPOINT ["java", "-jar", "/app/your-app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/sj-lab-discoveryservice.jar"]
