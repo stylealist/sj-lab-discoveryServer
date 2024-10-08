@@ -1,13 +1,15 @@
 server:
   port: 8761
+  servlet:
+    context-path: /eureka
 
 spring:
   application:
     name: discoveryservice
-  cloud:
-    config:
-      uri: http://127.0.0.1:8888
-      name: discovery-config
+  #cloud:
+  #  config:
+  #    uri: http://127.0.0.1:8888
+  #    name: discovery-config
 
 eureka:
   client:
