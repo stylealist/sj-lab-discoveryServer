@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>discoveryservice</artifactId>
-    <version>discoveryservice 1.0.0</version>
+    <version>discoveryservice</version>
     <name>discoveryservice</name>
     <description>discoveryservice</description>
     <url/>
