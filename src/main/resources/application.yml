@@ -6,10 +6,8 @@ server:
 spring:
   application:
     name: discoveryservice
-  #cloud:
-  #  config:
-  #    uri: http://127.0.0.1:8888
-  #    name: discovery-config
+  profiles:
+    active: local
 
 eureka:
   client:
