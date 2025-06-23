@@ -13,16 +13,19 @@ spec:
       labels:
         app: discoveryserver
     spec:
+      imagePullSecrets:
+        - name: ncp-registry-secret
       containers:
         - name: discoveryserver
           image: sj-lab-registry.kr.ncr.ntruss.com/sj-lab-discoveryserver:latest  # ← 실제 이미지명으로 수정
           ports:
             - containerPort: 8761
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "local"
           volumeMounts:
             - name: config-volume
-              mountPath: /config
-      imagePullSecrets:
-        - name: ncp-registry-secret
+              mountPath: /app/config
       volumes:
         - name: config-volume
           configMap:
