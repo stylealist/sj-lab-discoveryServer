@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: discoveryserver
-  namespace: default
+  namespace: sj-lab
 spec:
   replicas: 1
   selector:

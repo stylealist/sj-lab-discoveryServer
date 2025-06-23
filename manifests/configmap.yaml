@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: discoveryserver-config
-  namespace: default
+  namespace: sj-lab
 data:
   application.yml: |
     server:
