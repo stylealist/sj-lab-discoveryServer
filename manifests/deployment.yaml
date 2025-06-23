@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: discoveryserver
-          image: stylealist/discoveryserver:latest  # ← 실제 이미지명으로 수정
+          image: sj-lab-registry.kr.ncr.ntruss.com/sj-lab-dicoveryserver:latest  # ← 실제 이미지명으로 수정
           ports:
             - containerPort: 8761
           volumeMounts:
