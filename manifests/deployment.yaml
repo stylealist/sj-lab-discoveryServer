@@ -21,6 +21,8 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
+      imagePullSecrets:
+        - name: ncp-registry-secret
       volumes:
         - name: config-volume
           configMap:
