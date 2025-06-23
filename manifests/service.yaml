@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: discoveryserver
-  namespace: sj-lab
+  namespace: default
 spec:
   selector:
     app: discoveryserver
