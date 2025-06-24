@@ -22,7 +22,7 @@ spec:
             - containerPort: 8761
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "local"
+              value: "prod"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
