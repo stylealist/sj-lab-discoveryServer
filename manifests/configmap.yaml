@@ -20,6 +20,8 @@ data:
 
   application-prod.yml: |
     eureka:
+      instance:
+        hostname: eureka.sj-lab.co.kr
       client:
         register-with-eureka: true
         fetch-registry: true
