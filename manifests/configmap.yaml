@@ -17,11 +17,11 @@ data:
       client:
         register-with-eureka: false
         fetch-registry: false
+        service-url:
+          defaultZone: http://localhost:8761
 
   application-prod.yml: |
     eureka:
-      instance:
-        hostname: eureka.sj-lab.co.kr
       client:
         register-with-eureka: true
         fetch-registry: true
