@@ -14,12 +14,6 @@ data:
         name: discoveryservice
       profiles:
         active: prod
-    eureka:
-      client:
-        register-with-eureka: false
-        fetch-registry: false
-        service-url:
-          defaultZone: http://localhost:8761/eureka
     management:
       endpoints:
         web:
@@ -28,10 +22,17 @@ data:
       endpoint:
         health:
           show-details: always
+  application-local.yml: |
+    eureka:
+      client:
+        register-with-eureka: false
+        fetch-registry: false
+        service-url:
+          defaultZone: http://localhost:8761/eureka
   application-prod.yml: |
     eureka:
       client:
-        register-with-eureka: true
-        fetch-registry: true
+        register-with-eureka: false
+        fetch-registry: false
         service-url:
           defaultZone: https://eureka.sj-lab.co.kr/eureka
