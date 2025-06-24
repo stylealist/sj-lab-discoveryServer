@@ -4,13 +4,5 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    tls:
-      enabled: true
     service-url:
-      defaultZone: https://eureka.sj-lab.co.kr/
-    instance:
-      prefer-ip-address: true
-      hostname: apigateway
-      non-secure-port-enabled: false
-      secure-port-enabled: true
-      secure-port: 8100
+      defaultZone: http://localhost:30087/

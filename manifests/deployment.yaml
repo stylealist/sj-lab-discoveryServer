@@ -25,8 +25,6 @@ spec:
               value: "prod"
             - name: SPRING_CONFIG_LOCATION
               value: "classpath:/,file:/app/config/"
-            - name: JAVA_OPTS
-              value: "-Dcom.sun.net.ssl.checkRevocation=false -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
