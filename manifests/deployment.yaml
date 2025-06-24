@@ -23,6 +23,8 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
+            - name: SPRING_CONFIG_LOCATION
+              value: "classpath:/,file:/app/config/"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
@@ -30,3 +32,5 @@ spec:
         - name: config-volume
           configMap:
             name: discoveryserver-config # dep
+
+
