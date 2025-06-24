@@ -12,6 +12,8 @@ data:
     spring:
       application:
         name: discoveryservice
+      profiles:
+        active: prod
     eureka:
       client:
         register-with-eureka: false
