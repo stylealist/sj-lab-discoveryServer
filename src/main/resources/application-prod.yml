@@ -2,7 +2,7 @@ eureka:
   instance:
     hostname: eureka.sj-lab.co.kr
   client:
-    register-with-eureka: false
-    fetch-registry: false
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
       defaultZone: https://eureka.sj-lab.co.kr/eureka
