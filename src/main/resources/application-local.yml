@@ -1,3 +1,4 @@
+# test
 eureka:
   client:
     register-with-eureka: false
