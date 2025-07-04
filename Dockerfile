@@ -11,7 +11,7 @@ COPY target/sj-lab-discoveryservice.jar /app/sj-lab-discoveryservice.jar
 EXPOSE 8761
 
 #기본 프로파일을 local로 설정 (환경 변수로 설정)
-ENV SPRING_PROFILES_ACTIVE=prod
+#ENV SPRING_PROFILES_ACTIVE=prod
 
 # 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "/app/sj-lab-discoveryservice.jar"]
