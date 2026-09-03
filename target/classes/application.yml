@@ -6,8 +6,8 @@ server:
 spring:
   application:
     name: discoveryservice
-  profiles:
-    active: local
+  #profiles:
+  #  active: local
 
 management:
   endpoints:
