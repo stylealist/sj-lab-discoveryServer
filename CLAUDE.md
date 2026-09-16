@@ -51,3 +51,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `target/` 디렉터리가 `.gitignore` 없이 git에 커밋되어 있어(`git status`에 `target/classes/application.yml` 등이 추적됨), 리소스 파일을 수정할 때는 반드시 `src/main/resources/` 쪽을 수정해야 함. `target/` 하위 파일은 빌드 산출물이므로 직접 편집하지 말 것.
 - `application.yml`의 `management.endpoints.web.exposure.include: "*"`는 모든 액추에이터 엔드포인트를 노출하므로, 운영 설정을 다룰 때 보안 관점에서 유의할 것.
 - 과거 커밋(`실서버에서 eureka 클라이언트가 감지되지 않도록 수정`)에서 알 수 있듯, 운영 환경에서의 Eureka self-registration 동작이 이슈가 된 이력이 있으므로 `eureka.client.*` 설정 변경 시 주의.
+
+## 통합 허브
+
+저장소를 넘나드는 작업(DB → 백엔드 → 디스커버리 → 게이트웨이 → 프론트엔드)의 총괄 기준 저장소는 `C:\developer\workspace\mapservice-rest`입니다. 시스템 전체 구조·API 계약은 그 저장소의 `docs/system-architecture.md`, 로컬 포트·기동 순서·CORS는 `docs/dev-environment.md`에 있고, MCP(GitHub/DB)와 로컬 비밀값도 그 저장소에서만 관리합니다.
