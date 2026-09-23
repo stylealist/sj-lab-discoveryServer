@@ -1,94 +1,96 @@
-# sj-lab-discoveryServer — 서비스 레지스트리(Eureka)
+# sj-lab-discoveryServer — 서비스 레지스트리 및 디스커버리 (Netflix Eureka)
 
-> sj-lab 마이크로서비스들이 자신을 등록하고, 게이트웨이가 이 목록을 보고 `lb://SERVICE-ID`로 라우팅하도록 하는 **디스커버리 서버**입니다.
-> 코드는 `@EnableEurekaServer`가 붙은 클래스 하나뿐이지만, **운영에서 이 서버의 동작을 이해하는 것이 장애 대응의 핵심**이었습니다.
-
-| | |
-|---|---|
-| **운영 대시보드** | `https://eureka.sj-lab.co.kr` |
-| **로컬 대시보드** | `http://localhost:8761` |
-| **스택** | Java 17 · Spring Boot 3.3.2 · Spring Cloud 2023.0.3 (Netflix Eureka Server) |
+`sj-lab-discoveryServer`는 sj-lab 분산 마이크로서비스들의 동적 위치(IP 및 포트)를 등록하고 상태를 추적하는 Spring Cloud Netflix Eureka 기반의 서비스 레지스트리(Service Registry)입니다.
 
 ---
 
-## 1. 위치
+## 1. 서비스 역할 및 핵심 책임
 
-```
-[게이트웨이] sj-lab-apigateway :8100 ──조회──┐
-                                              ▼
-[이 서비스] sj-lab-discoveryServer :8761 (Eureka Server)
-                                              ▲
-[백엔드] mapservice-rest · sj-lab-scheduler · sj-lab-authserver · fast-api-ai ──등록──┘
-```
-
-이 구조 덕분에 백엔드는 `server.port: 0`(랜덤 포트)으로 떠도 되고, 게이트웨이는 파드 IP를 몰라도 됩니다.
+- **중앙 서비스 레지스트리**: 백엔드 인스턴스(`mapservice-rest`, `sj-lab-scheduler`, `sj-lab-authserver`, `fast-api-ai`)가 기동될 때 자신의 네트워크 위치와 메타데이터를 등록받고 관리합니다.
+- **동적 서비스 디스커버리(Service Discovery)**: API 게이트웨이(`sj-lab-apigateway`)가 클라이언트 요청을 라우팅할 때, Eureka 레지스트리를 조회하여 가용한 인스턴스 목록을 실시간으로 획득하도록 지원합니다.
+- **하트비트 및 인스턴스 라이프사이클 관리**: 30초 주기의 하트비트(Heartbeat) 갱신을 통해 서비스 인스턴스의 헬스 상태를 감시하고, 장애 발생 시 만료된 인스턴스를 자동으로 제외합니다.
 
 ---
 
-## 2. 운영에서 배운 것 (면접에서 이야기하고 싶은 부분)
+## 2. 기술 스택
 
-### ① 배포 직후 간헐적 500/503의 정체
+- **언어 및 런타임**: Java 17, Spring Boot 3.3.2
+- **프레임워크**: Spring Cloud 2023.0.3 (Spring Cloud Netflix Eureka Server)
+- **모니터링**: Spring Boot Actuator
+- **배포 환경**: Docker, Kubernetes (NodePort 30087), Helm, Jenkins CI, ArgoCD (GitOps)
 
-백엔드를 재배포하면 잠깐 요청의 일부가 실패합니다. 원인은 **Eureka 레지스트리에 죽은 인스턴스가 남아 있는 구간**입니다(리스 만료까지 1~3분). 게이트웨이는 그 인스턴스로도 로드밸런싱을 시도해 연결 거부(500)가 나고, 목록이 빈 순간에는 503이 납니다.
+---
 
-대응을 절차로 정리했습니다.
+## 3. 서비스 디스커버리 및 등록 프로세스
 
+### 3.1 아키텍처 토폴로지
+
+```
+                      [Eureka Registry]
+                     (:8761 / eureka.sj-lab.co.kr)
+                       ▲              ▲
+    (30초 주기 Heartbeat)│              │(서비스 인스턴스 목록 질의)
+                       │              │
+    ┌──────────────────┴──┐         ┌─┴─────────────────┐
+    │ 마이크로서비스 인스턴스들 │         │ Spring Cloud      │
+    │ (동적 포트 할당)      │         │ API Gateway (:8100│
+    │ - MAPSERVICE-REST   │         └───────────────────┘
+    │ - SJ-LAB-SCHEDULER  │                   ▲
+    │ - SJ-LAB-AUTHSERVER │                   │ HTTPS 요청
+    │ - FAST-API-AI       │            [클라이언트 브라우저]
+    └─────────────────────┘
+```
+
+### 3.2 업무 및 라이프사이클 프로세스
+1. **인스턴스 기동 및 등록(Register)**:
+   - 각 마이크로서비스가 랜덤 포트(`server.port: 0`) 또는 지정 포트로 기동되면 `@EnableDiscoveryClient`를 통해 Eureka Server의 `/eureka/apps/{SERVICE-ID}`로 자신의 IP/호스트와 포트를 등록.
+2. **상태 유지 및 갱신(Renew)**:
+   - 클라이언트는 주기적(기본 30초)으로 REST PUT 핑을 전송하여 임대를 갱신.
+3. **게이트웨이 동적 라우팅**:
+   - `sj-lab-apigateway`는 서비스 ID(`lb://MAPSERVICE-REST` 등)를 Eureka에서 조회하여 실제 Pod IP로 부하 분산(Load Balancing) 요청 전달.
+4. **인스턴스 해제 및 제거(Cancel & Eviction)**:
+   - 인스턴스 정상 종료 시 REST DELETE 호출을 통해 레지스트리에서 즉시 제외.
+
+---
+
+## 4. 핵심 엔지니어링 구현 및 운영 상세
+
+### 4.1 로컬 및 운영 환경별 Self-Registration 제어
+- **로컬 개발 환경 (`local` 프로파일)**:
+  - Eureka 서버 단독 실행 시 자기 자신을 레지스트리 클라이언트로 등록하지 않도록 설정하여 불필요한 등록 시도 에러 로그를 방지합니다.
+  ```yaml
+  eureka:
+    client:
+      register-with-eureka: false
+      fetch-registry: false
+  ```
+- **운영 클라우드 환경**:
+  - Kubernetes 환경에서 외부 ConfigMap을 주입받아 동작하며, 클러스터 내부 및 Ingress(`https://eureka.sj-lab.co.kr`)를 통해 웹 대시보드 상태 조회를 지원합니다.
+
+### 4.2 인스턴스 갱신 지연 및 트러블슈팅 절차
+- 인스턴스 재배포 시 Eureka의 기본 리스 만료 주기(90초)와 캐시 갱신 지연으로 인해 일시적으로 종료된 Pod로 트래픽이 라우팅될 수 있습니다.
+- 긴급 운영 대응 및 로컬 디버깅 시 아래 REST API를 통해 비정상 인스턴스를 즉각 해제할 수 있습니다:
 ```powershell
-# 등록 상태 확인
+# 현재 등록된 서비스 인스턴스 목록 확인
 Invoke-RestMethod -Uri "http://localhost:8761/eureka/apps" -Headers @{Accept="application/json"}
 
-# 죽은 인스턴스 즉시 해제
-Invoke-WebRequest -Method Delete "http://localhost:8761/eureka/apps/MAPSERVICE-REST/<instanceId>"
+# 지정 인스턴스 즉시 강제 등록 해제
+Invoke-WebRequest -Method Delete "http://localhost:8761/eureka/apps/{SERVICE-ID}/{instanceId}"
 ```
-
-운영에서 실제로 이 증상을 재현·관찰해 `docs/dev-environment.md`에 기록해 두었고, 무중단 롤아웃(`replicas: 2` + preStop 지연)이 근본 해결책이라는 것도 과제로 남겨 두었습니다.
-
-### ② self-registration 설정
-
-로컬(`local` 프로파일)에서는 이 서버가 **자기 자신에게 클라이언트로 등록되지 않도록** `register-with-eureka: false`, `fetch-registry: false`로 둡니다. 운영에서 이 설정 때문에 문제가 됐던 이력이 있어 `eureka.client.*` 변경은 신중히 다룹니다.
-
-### ③ 설정 외부화
-
-운영 프로파일은 저장소에 두지 않고 **ConfigMap으로 주입**합니다(`SPRING_CONFIG_LOCATION=classpath:/,file:/app/config/`). 저장소가 public이므로 환경별 값이 코드에 섞이지 않게 하는 원칙을 전 서비스에 동일하게 적용했습니다.
 
 ---
 
-## 3. 실행
+## 5. 실행 및 개발 환경
 
-```bash
-mvnw.cmd clean package                                       # target/sj-lab-discoveryservice.jar
-mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local    # 8761
-mvnw.cmd test
+### 로컬 빌드 및 실행
+```powershell
+# Maven 빌드
+mvnw.cmd clean package
+
+# 로컬 프로파일 실행 (포트 8761)
+mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-기동 후 `http://localhost:8761`에서 등록된 서비스를 확인합니다. 총괄 저장소의 `scripts/local-stack.ps1`이 이 서버를 가장 먼저 띄웁니다.
-
-| 파일 | 내용 |
-|---|---|
-| `application.yml` | 포트 8761, 액추에이터 전체 노출 |
-| `application-local.yml` | self-registration 비활성 |
-
----
-
-## 4. 배포
-
-```
-git push → Jenkins(빌드 → 이미지 push) → sj-lab-k8s-manifests 의 image.tag 자동 커밋
-        → ArgoCD 동기화 → Kubernetes 롤아웃 (NodePort 30087 → 8761)
-```
-
-Dockerfile은 Maven 빌드를 하지 않고 jar를 복사하므로 `package`가 선행되어야 합니다. `manifests/deployment.yaml`은 Helm 전환 이전의 잔재이므로, 배포를 다룰 때는 현재 방식(Helm 차트)을 먼저 확인합니다.
-
----
-
-## 5. 주의 · 한계
-
-- **`target/` 디렉터리가 git에 추적되고 있습니다.** 설정을 고칠 때는 반드시 `src/main/resources/` 쪽을 수정하세요(빌드 산출물을 직접 편집하면 다음 빌드에 사라집니다).
-- 액추에이터가 전부 열려 있어(`exposure.include: "*"`) 운영 보안 관점에서 정리가 필요합니다.
-- 단일 인스턴스라 이 서버가 죽으면 새 등록·조회가 멈춥니다(기존 캐시로 잠시 버팁니다). 피어 구성은 다음 과제입니다.
-
-## 참고
-
-- 전체 구조: 총괄 저장소 `mapservice-rest`의 `docs/system-architecture.md`
-- 로컬 기동 순서·장애 대응: 같은 저장소의 `docs/dev-environment.md`
-- 작업 규칙: 이 저장소의 `CLAUDE.md`
+### 상태 확인
+- Eureka 웹 대시보드: `http://localhost:8761`
+- Actuator Health 엔드포인트: `http://localhost:8761/actuator/health`
