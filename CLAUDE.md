@@ -52,6 +52,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `application.yml`의 `management.endpoints.web.exposure.include: "*"`는 모든 액추에이터 엔드포인트를 노출하므로, 운영 설정을 다룰 때 보안 관점에서 유의할 것.
 - 과거 커밋(`실서버에서 eureka 클라이언트가 감지되지 않도록 수정`)에서 알 수 있듯, 운영 환경에서의 Eureka self-registration 동작이 이슈가 된 이력이 있으므로 `eureka.client.*` 설정 변경 시 주의.
 
+## README 유지 규칙
+
+- **이 저장소에 기능·API·화면·실행 방법·설정(환경변수/시크릿)·배포 방식이 추가되거나 바뀌면, 같은 작업에서 `README.md`도 함께 갱신할 것.** 코드만 고치고 README를 그대로 두지 말 것.
+- 갱신 대상 예: 새 엔드포인트·화면·모듈, 빌드/실행 명령 변경, 포트·의존 서비스 변경, 환경변수·Secret 추가, 배포 절차 변경, 해결한 이슈·새로 생긴 한계.
+- **README는 면접관·처음 보는 사람이 읽는 문서**다(이 프로젝트는 포트폴리오). 사용자·리뷰어 관점의 설명(무엇을·왜·어떻게 확인하는지)은 README에, 에이전트/내부 작업 규칙은 이 문서(CLAUDE.md)에 둔다.
+- 문구가 실제 코드와 어긋나지 않는지 확인하고, 구현되지 않은 기능을 적지 말 것. 한계·미구현 항목은 숨기지 말고 "현재 한계"에 적는다.
+
 ## 통합 허브
 
 저장소를 넘나드는 작업(DB → 백엔드 → 디스커버리 → 게이트웨이 → 프론트엔드)의 총괄 기준 저장소는 `C:\developer\workspace\mapservice-rest`입니다. 시스템 전체 구조·API 계약은 그 저장소의 `docs/system-architecture.md`, 로컬 포트·기동 순서·CORS는 `docs/dev-environment.md`에 있고, MCP(GitHub/DB)와 로컬 비밀값도 그 저장소에서만 관리합니다.
